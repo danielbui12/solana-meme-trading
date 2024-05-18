@@ -14,10 +14,14 @@ pub const Q32: u128 = (u32::MAX as u128) + 1; // 2^32
 pub const FREEZED_AMOUNT: u64 = 200_000_000_000_000_000;
 pub const AVAILABLE_AMOUNT: u64 = 800_000_000_000_000_000;
 pub const BASE_INIT_TOKEN_1_AMOUNT: u64 =
-    24 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 24 * 10**9
+    24 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 24 (virtual) SOL
+pub const MIN_AMOUNT_TO_DEPLOY: u64 =
+    85 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 85 (real) SOL
+pub const BALANCE_OF_DEPLOYED_POOL: u64 =
+    79 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 85 (real) SOL
 
 pub enum PoolStatusBitIndex {
-    Deposit,
+    Deploy,
     Withdraw,
     Swap,
 }
@@ -34,6 +38,8 @@ pub enum PoolStatusBitFlag {
 pub struct PoolState {
     /// Which config the pool belongs
     pub amm_config: Pubkey,
+    /// Which config the vault_1 belongs
+    pub vault_1_bump: u8,
     /// pool creator
     pub pool_creator: Pubkey,
     /// Token A
@@ -81,11 +87,12 @@ pub struct PoolState {
 }
 
 impl PoolState {
-    pub const LEN: usize = 8 + 10 * 32 + 1 * 5 + 8 * 6 + 8 * 32;
+    pub const LEN: usize = 8 + 8 + 10 * 32 + 1 * 5 + 8 * 6 + 8 * 32;
 
     pub fn initialize(
         &mut self,
         auth_bump: u8,
+        vault_1_bump: u8,
         lp_supply: u64,
         open_time: u64,
         pool_creator: Pubkey,
@@ -107,6 +114,7 @@ impl PoolState {
         // self.token_1_program = *token_1_mint.to_account_info().owner;
         self.observation_key = observation_key;
         self.auth_bump = auth_bump;
+        self.vault_1_bump = vault_1_bump;
         self.mint_0_decimals = token_0_mint.decimals;
         self.mint_1_decimals = 9; // LAMPORT_PER_SOL
         self.lp_supply = lp_supply;
@@ -174,7 +182,7 @@ pub mod pool_test {
                 false
             );
             assert_eq!(
-                pool_state.get_status_by_bit(PoolStatusBitIndex::Deposit),
+                pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy),
                 true
             );
             assert_eq!(
@@ -209,7 +217,7 @@ pub mod pool_test {
                 false
             );
             assert_eq!(
-                pool_state.get_status_by_bit(PoolStatusBitIndex::Deposit),
+                pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy),
                 false
             );
             assert_eq!(
@@ -223,7 +231,7 @@ pub mod pool_test {
                 false
             );
             assert_eq!(
-                pool_state.get_status_by_bit(PoolStatusBitIndex::Deposit),
+                pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy),
                 false
             );
             assert_eq!(
@@ -234,7 +242,7 @@ pub mod pool_test {
             pool_state.set_status(3); // 0000011
             assert_eq!(pool_state.get_status_by_bit(PoolStatusBitIndex::Swap), true);
             assert_eq!(
-                pool_state.get_status_by_bit(PoolStatusBitIndex::Deposit),
+                pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy),
                 false
             );
             assert_eq!(

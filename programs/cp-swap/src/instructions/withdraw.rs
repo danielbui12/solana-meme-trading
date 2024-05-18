@@ -40,13 +40,9 @@ pub struct Withdraw<'info> {
     )]
     pub token_0_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// The owner's token account for receive token_1
-    #[account(
-        mut,
-        token::mint = token_1_vault.mint,
-        token::authority = owner
-    )]
-    pub token_1_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// CHECK: The owner's token account for receive token_1
+    #[account(mut, address = owner.key())]
+    pub token_1_account: UncheckedAccount<'info>,
 
     /// The address that holds pool tokens for token_0
     #[account(
@@ -80,13 +76,6 @@ pub struct Withdraw<'info> {
     )]
     pub vault_1_mint: Box<InterfaceAccount<'info, Mint>>,
 
-    /// Pool lp token mint
-    #[account(
-        mut,
-        address = pool_state.load()?.lp_mint @ ErrorCode::IncorrectLpMint)
-    ]
-    pub lp_mint: Box<InterfaceAccount<'info, Mint>>,
-
     /// memo program
     /// CHECK:
     #[account(
@@ -101,7 +90,6 @@ pub fn withdraw(
     minimum_token_0_amount: u64,
     minimum_token_1_amount: u64,
 ) -> Result<()> {
-    require_gt!(ctx.accounts.lp_mint.supply, 0);
     let pool_id = ctx.accounts.pool_state.key();
     let pool_state = &mut ctx.accounts.pool_state.load_mut()?;
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Withdraw) {

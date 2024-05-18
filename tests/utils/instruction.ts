@@ -222,7 +222,11 @@ export async function initialize(
     token0,
     program.programId
   );
-  const vault1 = authority;
+  const [vault1] = getPoolVaultAddress(
+    poolAddress,
+    SystemProgram.programId,
+    program.programId,
+  );
 
   const [observationAddress] = getOracleAccountAddress(
     poolAddress,
@@ -283,7 +287,11 @@ export async function swap_base_input(
     token0,
     program.programId
   );
-  const vault1 = auth;
+  const [vault1] = getPoolVaultAddress(
+    poolAddress,
+    SystemProgram.programId,
+    program.programId,
+  );;
 
   const token0Account = getAssociatedTokenAddressSync(
     token0,
@@ -345,7 +353,11 @@ export async function swap_base_output(
     token0,
     program.programId
   );
-  const vault1 = auth;
+  const [vault1] = getPoolVaultAddress(
+    poolAddress,
+    SystemProgram.programId,
+    program.programId,
+  );
 
   const token0Account = getAssociatedTokenAddressSync(
     token0,

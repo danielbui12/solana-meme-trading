@@ -241,17 +241,13 @@ pub fn create_token_account<'a>(
             TokenAccount::LEN
         }
     };
-    let lamports = Rent::get()?.minimum_balance(space);
-    let cpi_accounts = anchor_lang::system_program::CreateAccount {
-        from: payer.to_account_info(),
-        to: token_account.to_account_info(),
-    };
-    let cpi_context = CpiContext::new(system_program.to_account_info(), cpi_accounts);
-    anchor_lang::system_program::create_account(
-        cpi_context.with_signer(signer_seeds),
-        lamports,
-        space as u64,
-        token_program.key,
+    create_system_account(
+        space,
+        payer,
+        &token_account,
+        &token_program.key(),
+        &system_program,
+        signer_seeds,
     )?;
     initialize_account3(CpiContext::new(
         token_program.to_account_info(),
@@ -261,4 +257,27 @@ pub fn create_token_account<'a>(
             authority: authority.to_account_info(),
         },
     ))
+}
+
+pub fn create_system_account<'a>(
+    data_len: usize,
+    payer: &AccountInfo<'a>,
+    new_account: &AccountInfo<'a>,
+    owner: &Pubkey,
+    system_program: &AccountInfo<'a>,
+    signer_seeds: &[&[&[u8]]],
+) -> Result<()> {
+    let lamports = Rent::get()?.minimum_balance(data_len);
+    let cpi_accounts = anchor_lang::system_program::CreateAccount {
+        from: payer.to_account_info(),
+        to: new_account.to_account_info(),
+    };
+    let cpi_context = CpiContext::new(system_program.to_account_info(), cpi_accounts);
+    anchor_lang::system_program::create_account(
+        cpi_context.with_signer(signer_seeds),
+        lamports,
+        data_len as u64,
+        owner,
+    )?;
+    Ok(())
 }

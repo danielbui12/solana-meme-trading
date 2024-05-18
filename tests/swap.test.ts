@@ -141,7 +141,7 @@ describe("swap test", () => {
       poolState.token1Vault,
     );
 
-    const amount_in = new BN(toBigIntQuantity(3319502, metadata.decimals).toString());
+    const amount_in = new BN(toBigIntQuantity(2319502, metadata.decimals).toString());
     const txHash = await swap_base_input(
       program,
       owner,

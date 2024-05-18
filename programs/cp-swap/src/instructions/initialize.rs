@@ -8,9 +8,9 @@ use anchor_lang::{accounts::interface_account::InterfaceAccount, prelude::*};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{mint_to, MintTo, Token},
-    token_2022::spl_token_2022,
     token_interface::Mint,
 };
+use spl_memo::solana_program::program_pack::Pack;
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -59,9 +59,6 @@ pub struct Initialize<'info> {
     )]
     pub token_0_mint: Box<InterfaceAccount<'info, Mint>>,
 
-    // /// CHECK: NATIVE_SOL mint
-    // pub token_1_mint: Program<'info, System>,
-    //
     /// CHECK: Token_0 vault for the pool
     #[account(
         mut,
@@ -77,7 +74,12 @@ pub struct Initialize<'info> {
     /// CHECK: Token_1 vault for the pool
     #[account(
         mut,
-        address = authority.key()
+        seeds = [
+            POOL_VAULT_SEED.as_bytes(),
+            pool_state.key().as_ref(),
+            system_program.key().as_ref(),  
+        ],
+        bump,
     )]
     pub token_1_vault: UncheckedAccount<'info>,
 
@@ -118,6 +120,7 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
     if ctx.accounts.amm_config.disable_create_pool {
         return err!(ErrorCode::NotApproved);
     }
+
     // due to stack/heap limitations, we have to create redundant new accounts ourselves.
     create_token_account(
         &ctx.accounts.authority.to_account_info(),
@@ -134,11 +137,6 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
         ][..]],
     )?;
 
-    let seeds = &[
-        crate::CREATE_MINT_SEED.as_bytes(),
-        &[ctx.bumps.token_0_mint],
-    ];
-    let signer = [&seeds[..]];
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -147,7 +145,10 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
                 to: ctx.accounts.token_0_vault.to_account_info(),
                 mint: ctx.accounts.token_0_mint.to_account_info(),
             },
-            &signer,
+            &[&[
+              crate::CREATE_MINT_SEED.as_bytes(),
+              &[ctx.bumps.token_0_mint],
+            ][..]],
         ),
         FREEZED_AMOUNT + AVAILABLE_AMOUNT,
     )?;
@@ -156,16 +157,14 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
     observation_state.pool_id = ctx.accounts.pool_state.key();
 
     let pool_state = &mut ctx.accounts.pool_state.load_init()?;
-
+   
     let token_0_vault =
-        spl_token_2022::extension::StateWithExtensions::<spl_token_2022::state::Account>::unpack(
+        spl_token::state::Account::unpack(
             ctx.accounts
                 .token_0_vault
                 .to_account_info()
                 .try_borrow_data()?
-                .deref(),
-        )?
-        .base;
+                .deref())?;
     let token_1_vault = ctx
         .accounts
         .token_1_vault
@@ -196,6 +195,7 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
 
     pool_state.initialize(
         ctx.bumps.authority,
+        ctx.bumps.token_1_vault,
         liquidity,
         open_time,
         ctx.accounts.creator.key(),

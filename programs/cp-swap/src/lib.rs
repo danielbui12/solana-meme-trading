@@ -122,43 +122,43 @@ pub mod booster_swap {
     /// # Arguments
     ///
     /// * `ctx`- The context of accounts
-    /// * `status` - The vaule of status
+    /// * `status` - The value of status
     ///
     pub fn update_pool_status(ctx: Context<UpdatePoolStatus>, status: u8) -> Result<()> {
         instructions::update_pool_status(ctx, status)
     }
 
-    // /// Collect the protocol fee accrued to the pool
-    // ///
-    // /// # Arguments
-    // ///
-    // /// * `ctx` - The context of accounts
-    // /// * `amount_0_requested` - The maximum amount of token_0 to send, can be 0 to collect fees in only token_1
-    // /// * `amount_1_requested` - The maximum amount of token_1 to send, can be 0 to collect fees in only token_0
-    // ///
-    // pub fn collect_protocol_fee(
-    //     ctx: Context<CollectProtocolFee>,
-    //     amount_0_requested: u64,
-    //     amount_1_requested: u64,
-    // ) -> Result<()> {
-    //     instructions::collect_protocol_fee(ctx, amount_0_requested, amount_1_requested)
-    // }
+    /// Collect the protocol fee accrued to the pool
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx` - The context of accounts
+    /// * `amount_0_requested` - The maximum amount of token_0 to send, can be 0 to collect fees in only token_1
+    /// * `amount_1_requested` - The maximum amount of token_1 to send, can be 0 to collect fees in only token_0
+    ///
+    pub fn collect_protocol_fee(
+        ctx: Context<CollectProtocolFee>,
+        amount_0_requested: u64,
+        amount_1_requested: u64,
+    ) -> Result<()> {
+        instructions::collect_protocol_fee(ctx, amount_0_requested, amount_1_requested)
+    }
 
-    // /// Collect the fund fee accrued to the pool
-    // ///
-    // /// # Arguments
-    // ///
-    // /// * `ctx` - The context of accounts
-    // /// * `amount_0_requested` - The maximum amount of token_0 to send, can be 0 to collect fees in only token_1
-    // /// * `amount_1_requested` - The maximum amount of token_1 to send, can be 0 to collect fees in only token_0
-    // ///
-    // pub fn collect_fund_fee(
-    //     ctx: Context<CollectFundFee>,
-    //     amount_0_requested: u64,
-    //     amount_1_requested: u64,
-    // ) -> Result<()> {
-    //     instructions::collect_fund_fee(ctx, amount_0_requested, amount_1_requested)
-    // }
+    /// Collect the fund fee accrued to the pool
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx` - The context of accounts
+    /// * `amount_0_requested` - The maximum amount of token_0 to send, can be 0 to collect fees in only token_1
+    /// * `amount_1_requested` - The maximum amount of token_1 to send, can be 0 to collect fees in only token_0
+    ///
+    pub fn collect_fund_fee(
+        ctx: Context<CollectFundFee>,
+        amount_0_requested: u64,
+        amount_1_requested: u64,
+    ) -> Result<()> {
+        instructions::collect_fund_fee(ctx, amount_0_requested, amount_1_requested)
+    }
 
     /// Creates a pool for the given token pair and the initial price
     ///
@@ -173,7 +173,7 @@ pub mod booster_swap {
         instructions::initialize(ctx, open_time)
     }
 
-    // /// Close lp for token0-token1, create Booster CPMM
+    // /// Withdraw token from Booster CPMM
     // ///
     // /// # Arguments
     // ///
@@ -228,5 +228,15 @@ pub mod booster_swap {
         amount_out: u64,
     ) -> Result<()> {
         instructions::swap_base_output(ctx, trade_direction, max_amount_in, amount_out)
+    }
+
+    /// Deploy pair
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx`- The context of accounts
+    ///
+    pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
+        instructions::deploy_pair(ctx)
     }
 }

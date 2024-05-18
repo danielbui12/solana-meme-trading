@@ -160,7 +160,12 @@ pub fn swap_base_output(
         actual_token_1_amount,
         !is_zero_for_one.clone(),
         ctx.accounts.system_program.to_account_info(),
-        &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
+        &[&[
+            POOL_VAULT_SEED.as_bytes(),
+            ctx.accounts.pool_state.key().as_ref(),
+            ctx.accounts.system_program.key().as_ref(),
+            &[pool_state.vault_1_bump][..],
+        ][..]],
     )?;
 
     if !is_zero_for_one {

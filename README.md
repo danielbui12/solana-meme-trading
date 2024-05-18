@@ -17,3 +17,5 @@ Clone the repository and test the program.
 git clone https://github.com/danielbui12/booster-swap
 cd booster-swap && anchor test
 ```
+
+TODO: update token_1 vault

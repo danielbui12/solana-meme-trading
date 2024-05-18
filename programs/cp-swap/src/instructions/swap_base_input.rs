@@ -44,7 +44,7 @@ pub struct Swap<'info> {
     pub token_0_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// CHECK: The user token account for token_1
-    #[account(mut)]
+    #[account(mut, address = payer.key())]
     pub token_1_account: UncheckedAccount<'info>,
 
     /// CHECK: The vault token account for token 0
@@ -224,14 +224,18 @@ pub fn swap_base_input(
         is_zero_for_one.clone(),
         &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
     )?;
-
     transfer_native_token(
         ctx.accounts.token_1_vault.to_account_info(),
         ctx.accounts.token_1_account.to_account_info(),
         actual_token_1_amount,
         !is_zero_for_one.clone(),
         ctx.accounts.system_program.to_account_info(),
-        &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
+        &[&[
+            POOL_VAULT_SEED.as_bytes(),
+            ctx.accounts.pool_state.key().as_ref(),
+            ctx.accounts.system_program.key().as_ref(),
+            &[pool_state.vault_1_bump][..],
+        ][..]],
     )?;
 
     if !is_zero_for_one {
@@ -243,7 +247,7 @@ pub fn swap_base_input(
             true,
             ctx.accounts.system_program.to_account_info(),
             &[],
-        )?;  
+        )?;
     // } else {
     //     // take the fee when swap from SPL token -> Native
     //     transfer_native_token(
