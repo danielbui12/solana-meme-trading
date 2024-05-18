@@ -2,6 +2,7 @@ use super::swap_base_input::Swap;
 use crate::curve::{calculator::CurveCalculator, TradeDirection};
 use crate::error::ErrorCode;
 use crate::states::*;
+use crate::utils::math::to_decimals;
 use crate::utils::token::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
@@ -27,6 +28,8 @@ pub fn swap_base_output(
     let token_0_vault = ctx.accounts.token_0_vault.clone();
     let token_1_vault = ctx.accounts.token_1_vault.clone();
 
+    let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
+
     // Calculate the trade amounts
     let (trade_fee_rate, total_input_token_amount, total_output_token_amount) = if is_zero_for_one {
         let (total_input_token_amount, total_output_token_amount) =
@@ -35,7 +38,7 @@ pub fn swap_base_output(
         (
             ctx.accounts.amm_config.trade_from_zero_to_one_fee_rate,
             total_input_token_amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
             total_output_token_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
@@ -51,7 +54,7 @@ pub fn swap_base_output(
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
             total_output_token_amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
         )
     };
@@ -206,7 +209,7 @@ pub fn swap_base_output(
             ctx.accounts
                 .token_0_vault
                 .amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
             ctx.accounts
                 .token_1_vault
@@ -224,7 +227,7 @@ pub fn swap_base_output(
             ctx.accounts
                 .token_0_vault
                 .amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
         )
     };

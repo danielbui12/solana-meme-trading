@@ -396,3 +396,16 @@ export async function swap_base_output(
   return txHash;
 }
 
+export async function getObservation(
+  program: Program<BoosterSwap>,
+  observationAddress: PublicKey,
+  sort: 'desc' | 'asc' = 'desc'
+) {
+  const data = await program.account.observationState.fetch(observationAddress);
+  return !data.initialized ? [] :
+    data.observations.sort((a, b) =>
+      sort == 'asc' ?
+        a.blockTimestamp.toNumber() - b.blockTimestamp.toNumber() :
+        b.blockTimestamp.toNumber() - a.blockTimestamp.toNumber()
+    );
+}

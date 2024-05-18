@@ -45,3 +45,11 @@ impl CheckedCeilDiv for u128 {
         Some((quotient, rhs))
     }
 }
+
+pub fn to_decimals(amount: u64, decimals: u32) -> u64 {
+    amount * 10u64.pow(decimals)
+}
+
+pub fn from_decimals(amount: u64, decimals: u32) -> u64 {
+    amount / 10u64.pow(decimals)
+}

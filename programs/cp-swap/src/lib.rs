@@ -42,6 +42,14 @@ pub mod create_pool_fee_receiver {
     declare_id!("Kd8e8t428wuB68bpksHTqu4VbM97cqYa3AKP3osYsKH");
 }
 
+pub mod sol_price_feed {
+    use anchor_lang::prelude::declare_id;
+    #[cfg(feature = "devnet")]
+    declare_id!("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix");
+    #[cfg(not(feature = "devnet"))]
+    declare_id!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG");
+}
+
 pub const AUTH_SEED: &str = "vault_auth_seed";
 pub const CREATE_MINT_SEED: &str = "create_mint";
 

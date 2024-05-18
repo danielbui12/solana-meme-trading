@@ -1,12 +1,13 @@
 use crate::error::ErrorCode;
 use crate::states::*;
-use crate::utils::token::*;
+use crate::utils::{token::*, math::{to_decimals, from_decimals}};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::{
     token::Token,
     token_interface::{Mint, TokenAccount},
 };
+use pyth_sdk_solana::state::SolanaPriceAccount;
 
 #[derive(Accounts)]
 pub struct DeployPair<'info> {
@@ -70,6 +71,10 @@ pub struct DeployPair<'info> {
     /// The program account for the most recent oracle observation
     #[account(mut, address = pool_state.load()?.observation_key)]
     pub observation_state: AccountLoader<'info, ObservationState>,
+    
+    /// CHECK: The Pyth price feed account
+    #[account(address = crate::sol_price_feed::id())]
+    pub price_feed: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
 
@@ -80,7 +85,7 @@ pub struct DeployPair<'info> {
 
 pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
     let block_timestamp = solana_program::clock::Clock::get()?.unix_timestamp as u64;
-    let pool_id = ctx.accounts.pool_state.key();
+    let observation_state = ctx.accounts.observation_state.load()?;
     let pool_state = &mut ctx.accounts.pool_state.load_mut()?;
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy)
         || block_timestamp <= pool_state.open_time
@@ -88,12 +93,36 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
         return err!(ErrorCode::NotApproved);
     }
 
-    let token_0_vault = ctx.accounts.token_0_vault.clone();
-    let token_1_vault = ctx.accounts.token_1_vault.clone();
-
     // invoke Pyth program to get SOL price
+    let token_1_price = {
+        const STALENESS_THRESHOLD: u64 = 10; // staleness threshold in seconds
+        let price_feed = SolanaPriceAccount::account_info_to_feed(&ctx.accounts.price_feed).unwrap();
+        let current_price = price_feed
+            .get_price_no_older_than(oracle::default_block_timestamp(), STALENESS_THRESHOLD)
+            .unwrap();
+        let display_price = from_decimals(
+            u64::try_from(current_price.price).unwrap(),
+            u32::try_from(-current_price.expo).unwrap()
+        );
+        u128::try_from(display_price).unwrap()
+    };
 
+    let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
+    let available_amount = to_decimals(AVAILABLE_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
     // check market cap
+    let token_0_price = {
+        let (cumulative_token_0_price_x32, _) = observation_state.last_token_cumulative_price();
+        cumulative_token_0_price_x32.checked_mul(token_1_price).unwrap()
+    };
+    let token_0_market_cap = {
+        let amount_in_market =  available_amount.checked_sub(
+            ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap()
+        )
+        .unwrap();
+        require_gt!(amount_in_market, 0, ErrorCode::InvalidMarketCap);
+        token_0_price.checked_mul(amount_in_market as u128).unwrap()
+    };
+    require_gte!(token_0_market_cap, to_decimals(MIN_TOKEN_0_MARKET_CAP, ctx.accounts.token_0_mint.decimals.into()) as u128, ErrorCode::InvalidMarketCap);
 
     // create Raydium CPMM pool with `FREEZED_AMOUNT` token_0 and `BALANCE_OF_DEPLOYED_POOL` token_1
 
@@ -103,13 +132,13 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.token_0_mint.to_account_info(),
         ctx.accounts.token_0_vault.to_account_info(),
-        ctx.accounts.token_0_vault.amount.checked_sub(FREEZED_AMOUNT).unwrap(),
+        ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap(),
         &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
     )?;
 
     // emit event
 
-    // close oracle, vault_0, vault_1, authority account
+    // close observation, vault_0, vault_1, pool_state account
     // & transfer the rest of balance vault_1 to pool creator
 
     Ok(())

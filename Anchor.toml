@@ -33,3 +33,5 @@ url = "https://api.mainnet-beta.solana.com"
 [[test.validator.clone]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 
+[[test.validator.clone]]
+address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"

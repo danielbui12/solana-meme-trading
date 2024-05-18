@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, BN } from "@coral-xyz/anchor";
 import { BoosterSwap } from "../target/types/booster_swap";
-import { LAMPORTS_PER_SOL_DECIMAL, TradeDirection, getMintAuthAddress, logPairBalance, setupSwapTest, swap_base_input, swap_base_output, toBigIntQuantity } from "./utils";
+import { LAMPORTS_PER_SOL_DECIMAL, TradeDirection, getMintAuthAddress, getObservation, logPairBalance, setupSwapTest, swap_base_input, swap_base_output, toBigIntQuantity } from "./utils";
 import { assert, expect } from "chai";
 import { getAccount, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 
@@ -122,6 +122,14 @@ describe("swap test", () => {
     ).to.be.gte(amount_in.toNumber());
   });
 
+  it("get observation", async () => {
+    const oracle = await getObservation(program, poolState.observationKey);
+    console.log('oracle blockTimestamp', oracle[0].blockTimestamp.toString());
+    console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
+    console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
+    expect(true).to.be.eq(true)
+  })
+
   it("swap Zero For One input-based", async () => {
     const token0 = poolState.token0Mint;
     const token0AccountBefore = await getOrCreateAssociatedTokenAccount(
@@ -199,6 +207,14 @@ describe("swap test", () => {
     ).to.be.eq(amount_in.toString());
     assert(token1BalanceAfter > token1AccountBalanceBefore, "Invalid token_1 balance after swap");
   });
+
+  it("get observation", async () => {
+    const oracle = await getObservation(program, poolState.observationKey);
+    console.log('oracle blockTimestamp', oracle[0].blockTimestamp.toString());
+    console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
+    console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
+    expect(true).to.be.eq(true)
+  })
 
   it("swap One For Zero output-based", async () => {
     const token0 = poolState.token0Mint;
@@ -280,6 +296,14 @@ describe("swap test", () => {
     assert(token1BalanceAfter <= token1AccountBalanceBefore, "Invalid token_1 balance after swap");
   });
 
+  it("get observation", async () => {
+    const oracle = await getObservation(program, poolState.observationKey);
+    console.log('oracle blockTimestamp', oracle[0].blockTimestamp.toString());
+    console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
+    console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
+    expect(true).to.be.eq(true)
+  })
+
   it("swap Zero For one output-based", async () => {
     const token0 = poolState.token0Mint;
     const token0AccountBefore = await getOrCreateAssociatedTokenAccount(
@@ -359,4 +383,12 @@ describe("swap test", () => {
     ).to.be.lt(maximum_amount_in.toNumber());
     assert(token1BalanceAfter >= token1AccountBalanceBefore, "Invalid token_1 balance after swap");
   });
+
+  it("get observation", async () => {
+    const oracle = await getObservation(program, poolState.observationKey);
+    console.log('oracle blockTimestamp', oracle[0].blockTimestamp.toString());
+    console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
+    console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
+    expect(true).to.be.eq(true)
+  })
 });

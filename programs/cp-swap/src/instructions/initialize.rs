@@ -137,6 +137,8 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
         ][..]],
     )?;
 
+    let total_supply = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into()) 
+        + to_decimals(AVAILABLE_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -150,7 +152,7 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
               &[ctx.bumps.token_0_mint],
             ][..]],
         ),
-        FREEZED_AMOUNT + AVAILABLE_AMOUNT,
+        total_supply,
     )?;
 
     let mut observation_state = ctx.accounts.observation_state.load_init()?;

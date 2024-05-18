@@ -29,8 +29,8 @@ pub enum ErrorCode {
     ZeroTradingTokens,
     #[msg("Not support token_2022 mint extension")]
     NotSupportMint,
-    #[msg("invaild vault")]
+    #[msg("invalid vault")]
     InvalidVault,
-    #[msg("Init lp amount is too less(Because 100 amount lp will be locked)")]
-    InitLpAmountTooLess,
+    #[msg("Marketcap is too low")]
+    InvalidMarketCap,
 }

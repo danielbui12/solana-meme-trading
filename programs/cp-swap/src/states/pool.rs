@@ -1,9 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::Mint;
-use std::{
-    ops::{BitAnd, BitOr, BitXor},
-    str::FromStr,
-};
+use std::ops::{BitAnd, BitOr, BitXor};
 /// Seed to derive account address and signature
 pub const POOL_SEED: &str = "pool";
 pub const POOL_LP_MINT_SEED: &str = "pool_lp_mint";
@@ -11,8 +8,9 @@ pub const POOL_VAULT_SEED: &str = "pool_vault";
 
 pub const Q32: u128 = (u32::MAX as u128) + 1; // 2^32
 
-pub const FREEZED_AMOUNT: u64 = 200_000_000_000_000_000;
-pub const AVAILABLE_AMOUNT: u64 = 800_000_000_000_000_000;
+pub const MIN_TOKEN_0_MARKET_CAP: u64 = 50_000;
+pub const FREEZED_AMOUNT: u64 = 200_000_000;
+pub const AVAILABLE_AMOUNT: u64 = 800_000_000;
 pub const BASE_INIT_TOKEN_1_AMOUNT: u64 =
     24 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 24 (virtual) SOL
 pub const MIN_AMOUNT_TO_DEPLOY: u64 =
@@ -49,8 +47,6 @@ pub struct PoolState {
 
     /// Mint information for token A
     pub token_0_mint: Pubkey,
-    /// Mint information for token B
-    pub token_1_mint: Pubkey,
 
     /// token_0 program
     pub token_0_program: Pubkey,
@@ -87,7 +83,7 @@ pub struct PoolState {
 }
 
 impl PoolState {
-    pub const LEN: usize = 8 + 8 + 10 * 32 + 1 * 5 + 8 * 6 + 8 * 32;
+    pub const LEN: usize = 8 + 8 + 9 * 32 + 1 * 5 + 8 * 6 + 8 * 32;
 
     pub fn initialize(
         &mut self,
@@ -100,7 +96,6 @@ impl PoolState {
         token_0_vault: Pubkey,
         token_1_vault: Pubkey,
         token_0_mint: &InterfaceAccount<Mint>,
-        // token_1_mint: &InterfaceAccount<Mint>,
         observation_key: Pubkey,
     ) {
         self.amm_config = amm_config.key();
@@ -108,8 +103,8 @@ impl PoolState {
         self.token_0_vault = token_0_vault;
         self.token_1_vault = token_1_vault;
         self.token_0_mint = token_0_mint.key();
-        self.token_1_mint =
-            Pubkey::from_str("So11111111111111111111111111111111111111111").unwrap();
+        // self.token_1_mint =
+        //     Pubkey::from_str("So11111111111111111111111111111111111111111").unwrap();
         self.token_0_program = *token_0_mint.to_account_info().owner;
         // self.token_1_program = *token_1_mint.to_account_info().owner;
         self.observation_key = observation_key;

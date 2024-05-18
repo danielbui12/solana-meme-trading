@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub const OBSERVATION_SEED: &str = "observation";
 // Number of ObservationState element
 pub const OBSERVATION_NUM: usize = 100;
-pub const OBSERVATION_UPDATE_DURATION_DEFAULT: u64 = 15;
+pub const OBSERVATION_UPDATE_DURATION_DEFAULT: u64 = 0; // 15
 
 /// The element of observations in ObservationState
 #[zero_copy(unsafe)]
@@ -109,12 +109,25 @@ impl ObservationState {
             self.observation_index = next_observation_index;
         }
     }
+
+    pub fn last_token_cumulative_price(&self) -> (u128, u128) {
+        (
+            self.observations[self.observation_index as usize].cumulative_token_0_price_x32,
+            self.observations[self.observation_index as usize].cumulative_token_1_price_x32,
+        )
+    }
 }
 
 /// Returns the block timestamp truncated to 32 bits, i.e. mod 2**32
 ///
 pub fn block_timestamp() -> u64 {
     Clock::get().unwrap().unix_timestamp as u64 // truncation is desired
+}
+
+/// Returns the block timestamp
+///
+pub fn default_block_timestamp() -> i64 {
+    Clock::get().unwrap().unix_timestamp
 }
 
 #[cfg(test)]

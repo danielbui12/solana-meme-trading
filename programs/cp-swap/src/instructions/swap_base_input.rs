@@ -2,7 +2,7 @@ use crate::curve::calculator::CurveCalculator;
 use crate::curve::TradeDirection;
 use crate::error::ErrorCode;
 use crate::states::*;
-use crate::utils::token::*;
+use crate::utils::{token::*, math::to_decimals};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::{
@@ -99,6 +99,8 @@ pub fn swap_base_input(
     // Take transfer fees into account for actual amount transferred in
     require_gt!(amount_in, 0);
 
+    let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
+
     // Calculate the trade amounts
     let (trade_fee_rate, total_input_token_amount, total_output_token_amount) = if is_zero_for_one {
         let (total_input_token_amount, total_output_token_amount) = pool_state
@@ -110,7 +112,7 @@ pub fn swap_base_input(
         (
             ctx.accounts.amm_config.trade_from_zero_to_one_fee_rate,
             total_input_token_amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
             total_output_token_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
@@ -129,7 +131,7 @@ pub fn swap_base_input(
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
             total_output_token_amount
-                .checked_sub(FREEZED_AMOUNT)
+                .checked_sub(freezed_amount)
                 .unwrap(),
         )
     };
@@ -275,13 +277,13 @@ pub fn swap_base_input(
     let (token_0_price_x64, token_1_price_x64) = if is_zero_for_one
     {
         pool_state.token_price_x32(
-            ctx.accounts.token_0_vault.amount.checked_sub(FREEZED_AMOUNT).unwrap(),
+            ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap(),
             ctx.accounts.token_1_vault.get_lamports().checked_add(BASE_INIT_TOKEN_1_AMOUNT).unwrap(),
         )
     } else {
         pool_state.token_price_x32(
             ctx.accounts.token_1_vault.get_lamports().checked_add(BASE_INIT_TOKEN_1_AMOUNT).unwrap(),
-            ctx.accounts.token_0_vault.amount.checked_sub(FREEZED_AMOUNT).unwrap(),
+            ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap(),
         )
     };
 
