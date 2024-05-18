@@ -15,7 +15,7 @@ booster_swap = "HdNeVJt9x8p5G5Q99A3PySR4bNnzaLzHdSAw5B5eWZzC"
 
 
 [registry]
-url = "https://github.com/raydium-io/raydium-cp-swap"
+url = "https://github.com/danielbui12/booster-swap"
 
 [provider]
 cluster = "localnet"

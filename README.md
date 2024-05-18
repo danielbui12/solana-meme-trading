@@ -1,6 +1,6 @@
-# raydium-cp-swap
+# booster-swap
 
-Raydium constant product AMM Program without place order to OpenBook.
+Booster swap.
 
 ## Environment Setup
 
@@ -14,10 +14,6 @@ Clone the repository and test the program.
 
 ```shell
 
-git clone https://github.com/raydium-io/raydium-cp-swap
-cd raydium-cp-swap && anchor test
+git clone https://github.com/danielbui12/booster-swap
+cd booster-swap && anchor test
 ```
-
-## License
-
-Raydium constant product swap is licensed under the Apache License, Version 2.0.

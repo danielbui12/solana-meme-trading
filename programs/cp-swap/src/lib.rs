@@ -8,18 +8,18 @@ use crate::curve::fees::FEE_RATE_DENOMINATOR_VALUE;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-// use solana_security_txt::security_txt;
+use solana_security_txt::security_txt;
 
-// #[cfg(not(feature = "no-entrypoint"))]
-// security_txt! {
-//     name: "raydium-cp-swap",
-//     project_url: "https://raydium.io",
-//     contacts: "link:https://immunefi.com/bounty/raydium",
-//     policy: "https://immunefi.com/bounty/raydium",
-//     source_code: "https://github.com/raydium-io/raydium-cp-swap",
-//     preferred_languages: "en",
-//     auditors: "https://github.com/raydium-io/raydium-docs/blob/master/audit/MadShield%20Q1%202024/raydium-cp-swap-v-1.0.0.pdf"
-// }
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "booster-swap",
+    project_url: "https://github.com/danielbui12/booster-swap",
+    contacts: "link:huytung139@gmail.com",
+    policy: "https://github.com/danielbui12/booster-swap",
+    source_code: "https://github.com/danielbui12/booster-swap",
+    preferred_languages: "en",
+    auditors: "#"
+}
 
 #[cfg(feature = "devnet")]
 declare_id!("HdNeVJt9x8p5G5Q99A3PySR4bNnzaLzHdSAw5B5eWZzC");
@@ -173,7 +173,7 @@ pub mod booster_swap {
         instructions::initialize(ctx, open_time)
     }
 
-    // /// Close lp for token0-token1, create raydium CPMM
+    // /// Close lp for token0-token1, create Booster CPMM
     // ///
     // /// # Arguments
     // ///
