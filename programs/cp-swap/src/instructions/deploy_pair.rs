@@ -1,5 +1,7 @@
+use std::borrow::BorrowMut;
 use crate::error::ErrorCode;
 use crate::states::*;
+use crate::utils::{close_account, close_token_account};
 use crate::utils::{token::*, math::{to_decimals, from_decimals}};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
@@ -85,7 +87,6 @@ pub struct DeployPair<'info> {
 
 pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
     let block_timestamp = solana_program::clock::Clock::get()?.unix_timestamp as u64;
-    let observation_state = ctx.accounts.observation_state.load()?;
     let pool_state = &mut ctx.accounts.pool_state.load_mut()?;
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy)
         || block_timestamp <= pool_state.open_time
@@ -109,14 +110,19 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
 
     let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
     let available_amount = to_decimals(AVAILABLE_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
+    let actual_token_0_amount = ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap();
+    let actual_token_1_amount = ctx.accounts.token_1_vault.get_lamports().checked_add(BASE_INIT_TOKEN_1_AMOUNT).unwrap();
     // check market cap
     let token_0_price = {
-        let (cumulative_token_0_price_x32, _) = observation_state.last_token_cumulative_price();
-        cumulative_token_0_price_x32.checked_mul(token_1_price).unwrap()
+        let (token_0_price_x32, _) = pool_state.token_price_x32(
+            actual_token_0_amount,
+            actual_token_1_amount,
+        );
+        token_0_price_x32.checked_mul(token_1_price).unwrap()
     };
     let token_0_market_cap = {
         let amount_in_market =  available_amount.checked_sub(
-            ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap()
+            actual_token_0_amount
         )
         .unwrap();
         require_gt!(amount_in_market, 0, ErrorCode::InvalidMarketCap);
@@ -132,14 +138,47 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.token_0_mint.to_account_info(),
         ctx.accounts.token_0_vault.to_account_info(),
-        ctx.accounts.token_0_vault.amount.checked_sub(freezed_amount).unwrap(),
+        actual_token_0_amount,
         &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
     )?;
 
     // emit event
+    emit!(events::DeployPairEvent {
+        pool_id: ctx.accounts.pool_state.key(),
+        token_0_vault_before: actual_token_0_amount,
+        token_1_vault_before: actual_token_1_amount,
+        token_0_market_cap: token_0_market_cap,
+    });
 
-    // close observation, vault_0, vault_1, pool_state account
-    // & transfer the rest of balance vault_1 to pool creator
+    // close `observation_state`, `vault_0`, `vault_1`, `pool_state` account
+    // transfer the rest of balance of all accounts to `create_pool_fee``
+
+    // close token_0_vault
+    close_token_account(
+        ctx.accounts.authority.to_account_info().borrow_mut(),
+        ctx.accounts.token_0_vault.to_account_info().borrow_mut(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+        ctx.accounts.token_program.to_account_info().borrow_mut(),
+        &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
+    )?;
+
+    // close token_1_vault
+    close_account(
+        ctx.accounts.token_1_vault.to_account_info().borrow_mut(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+    )?;
+
+    // close pool_state
+    close_account(
+        ctx.accounts.pool_state.to_account_info().borrow_mut(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+    )?;
+
+    // close observation
+    close_account(
+        ctx.accounts.observation_state.to_account_info().borrow_mut(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+    )?;
 
     Ok(())
 }

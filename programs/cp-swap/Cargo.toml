@@ -1,19 +1,23 @@
 [package]
 name = "booster-swap"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Booster Swap program"
 edition = "2021"
+authors = ["danielbui12"]
+license = "Apache-2.0"
+homepage = "https://github.com/danielbui12/booster-swap"
+repository = "https://github.com/danielbui12/booster-swap"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "booster_swap"
 
 [features]
+default = ["enable-log"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = []
 enable-log = []
 devnet = []
 

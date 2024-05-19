@@ -44,7 +44,7 @@ export async function setupInitializeTest(
   },
   confirmOptions?: ConfirmOptions
 ) {
-  await create_mint(
+  const token0Mint = await create_mint(
     program,
     owner,
     mintAuth,
@@ -67,7 +67,7 @@ export async function setupInitializeTest(
   // console.log('tradeZeroToOneFeeRate', ammConfig.tradeZeroToOneFeeRate.toString());
   // console.log('tradeOneToZeroFeeRate', ammConfig.tradeOneToZeroFeeRate.toString());
 
-  return { configAddress, token0: mintAuth };
+  return { configAddress, token0: token0Mint };
 }
 
 export async function setupSwapTest(
@@ -151,6 +151,9 @@ export async function create_mint(
   mintMetadata: MintMetadata,
   confirmOptions?: ConfirmOptions,
 ) {
+  if (await accountExist(program.provider.connection, mintAuth)) {
+    return mintAuth;
+  }
   const [metadataAddr] = getMintMetadataAddress(mintAuth);
 
   const ix = await program.methods
@@ -167,7 +170,7 @@ export async function create_mint(
     .instruction();
   const txHash = await sendAndConfirmIx(program.provider.connection, [ix], [creator], undefined, confirmOptions);
   console.log("create mint tx: ", txHash);
-  return txHash;
+  return mintAuth;
 }
 
 export async function mint_tokens(
@@ -213,6 +216,9 @@ export async function initialize(
     token0,
     program.programId
   );
+  if (await accountExist(program.provider.connection, poolAddress)) {
+    return { poolAddress, poolState: await program.account.poolState.fetch(poolAddress) };
+  }
 
   const [authority] = getAuthAddress(
     program.programId

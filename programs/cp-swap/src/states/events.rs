@@ -26,13 +26,26 @@ pub struct SwapEvent {
     #[index]
     pub pool_id: Pubkey,
     /// pool vault sub trade fees
-    pub input_vault_before: u64,
+    pub token_0_vault_before: u64,
     /// pool vault sub trade fees
-    pub output_vault_before: u64,
+    pub token_1_vault_before: u64,
     /// calculate result without transfer fee
     pub input_amount: u64,
     /// calculate result without transfer fee
     pub output_amount: u64,
     pub base_input: bool,
     pub trade_direction: u8,
+}
+
+/// Emitted when deploy pair
+#[event]
+pub struct DeployPairEvent {
+    #[index]
+    pub pool_id: Pubkey,
+    /// pool vault sub trade fees
+    pub token_0_vault_before: u64,
+    /// pool vault sub trade fees
+    pub token_1_vault_before: u64,
+    /// market cap
+    pub token_0_market_cap: u128,
 }

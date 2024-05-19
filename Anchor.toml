@@ -13,6 +13,9 @@ skip-lint = false
 [programs.localnet]
 booster_swap = "HdNeVJt9x8p5G5Q99A3PySR4bNnzaLzHdSAw5B5eWZzC"
 
+[programs.devnet]
+booster_swap = "HdNeVJt9x8p5G5Q99A3PySR4bNnzaLzHdSAw5B5eWZzC"
+
 
 [registry]
 url = "https://github.com/danielbui12/booster-swap"
@@ -23,6 +26,7 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/swap.test.ts"
+exec = "yarn ts-node -r tsconfig-paths/register clients/swap.ts"
 
 [test]
 startup_wait = 10000

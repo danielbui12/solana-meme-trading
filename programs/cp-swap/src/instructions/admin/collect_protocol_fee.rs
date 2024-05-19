@@ -70,9 +70,8 @@ pub fn collect_protocol_fee(
     let amount_0: u64;
     let amount_1: u64;
     let auth_bump: u8;
+    let mut pool_state = ctx.accounts.pool_state.load_mut()?;
     {
-        let mut pool_state = ctx.accounts.pool_state.load_mut()?;
-
         amount_0 = amount_0_requested.min(pool_state.protocol_fees_token_0);
         amount_1 = amount_1_requested.min(pool_state.protocol_fees_token_1);
 
@@ -106,7 +105,12 @@ pub fn collect_protocol_fee(
         amount_1,
         false,
         ctx.accounts.system_program.to_account_info(),
-        &[&[crate::AUTH_SEED.as_bytes(), &[auth_bump]]],
+        &[&[
+            POOL_VAULT_SEED.as_bytes(),
+            ctx.accounts.pool_state.key().as_ref(),
+            ctx.accounts.system_program.key().as_ref(),
+            &[pool_state.vault_1_bump][..],
+        ][..]],
     )?;
 
     Ok(())

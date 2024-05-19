@@ -109,13 +109,6 @@ impl ObservationState {
             self.observation_index = next_observation_index;
         }
     }
-
-    pub fn last_token_cumulative_price(&self) -> (u128, u128) {
-        (
-            self.observations[self.observation_index as usize].cumulative_token_0_price_x32,
-            self.observations[self.observation_index as usize].cumulative_token_1_price_x32,
-        )
-    }
 }
 
 /// Returns the block timestamp truncated to 32 bits, i.e. mod 2**32

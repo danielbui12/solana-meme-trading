@@ -99,6 +99,13 @@ pub mod booster_swap {
         )
     }
 
+    /// Creates a new mint
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx`- The context of accounts
+    /// * `metadata`- The metadata of mint
+    ///
     pub fn create_mint(ctx: Context<CreateMint>, metadata: MintParams) -> Result<()> {
         instructions::create_mint(ctx, metadata)
     }

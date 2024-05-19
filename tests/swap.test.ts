@@ -206,6 +206,7 @@ describe("swap test", () => {
       (token0AccountBefore.amount - token0AccountAfter.amount).toString()
     ).to.be.eq(amount_in.toString());
     assert(token1BalanceAfter > token1AccountBalanceBefore, "Invalid token_1 balance after swap");
+
   });
 
   it("get observation", async () => {
@@ -214,6 +215,7 @@ describe("swap test", () => {
     console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
     console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
     expect(true).to.be.eq(true)
+
   })
 
   it("swap One For Zero output-based", async () => {
@@ -294,6 +296,7 @@ describe("swap test", () => {
       (token0AccountAfter.amount - token0AccountBefore.amount).toString()
     ).to.be.eq(amount_out.toString());
     assert(token1BalanceAfter <= token1AccountBalanceBefore, "Invalid token_1 balance after swap");
+
   });
 
   it("get observation", async () => {
@@ -302,6 +305,7 @@ describe("swap test", () => {
     console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
     console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
     expect(true).to.be.eq(true)
+
   })
 
   it("swap Zero For one output-based", async () => {
@@ -382,6 +386,7 @@ describe("swap test", () => {
       Number(token0AccountBefore.amount - token0AccountAfter.amount)
     ).to.be.lt(maximum_amount_in.toNumber());
     assert(token1BalanceAfter >= token1AccountBalanceBefore, "Invalid token_1 balance after swap");
+
   });
 
   it("get observation", async () => {
@@ -390,5 +395,6 @@ describe("swap test", () => {
     console.log('oracle cumulativeToken0PriceX32', oracle[0].cumulativeToken0PriceX32.toString());
     console.log('oracle cumulativeToken1PriceX32', oracle[0].cumulativeToken1PriceX32.toString());
     expect(true).to.be.eq(true)
+
   })
 });

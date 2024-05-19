@@ -102,8 +102,8 @@ pub fn swap_base_input(
     let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
 
     // Calculate the trade amounts
-    let (trade_fee_rate, total_input_token_amount, total_output_token_amount) = if is_zero_for_one {
-        let (total_input_token_amount, total_output_token_amount) = pool_state
+    let (trade_fee_rate, total_token_0_amount, total_token_1_amount) = if is_zero_for_one {
+        let (total_token_0_amount, total_token_1_amount) = pool_state
             .vault_amount_without_fee(
                 token_0_vault.amount,
                 token_1_vault.get_lamports(),
@@ -111,15 +111,15 @@ pub fn swap_base_input(
 
         (
             ctx.accounts.amm_config.trade_from_zero_to_one_fee_rate,
-            total_input_token_amount
+            total_token_0_amount
                 .checked_sub(freezed_amount)
                 .unwrap(),
-            total_output_token_amount
+            total_token_1_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
         )
     } else {
-        let (total_output_token_amount, total_input_token_amount) = pool_state
+        let (total_token_1_amount, total_token_0_amount) = pool_state
             .vault_amount_without_fee(
                 token_0_vault.amount,
                 token_1_vault.get_lamports(),
@@ -127,23 +127,23 @@ pub fn swap_base_input(
 
         (
             ctx.accounts.amm_config.trade_from_one_to_zero_fee_rate,
-            total_input_token_amount
+            total_token_0_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
-            total_output_token_amount
+            total_token_1_amount
                 .checked_sub(freezed_amount)
                 .unwrap(),
         )
     };
 
-    let constant_before = u128::from(total_input_token_amount)
-        .checked_mul(u128::from(total_output_token_amount))
+    let constant_before = u128::from(total_token_0_amount)
+        .checked_mul(u128::from(total_token_1_amount))
         .unwrap();
 
     let result = CurveCalculator::swap_base_input(
         u128::from(amount_in),
-        u128::from(total_input_token_amount),
-        u128::from(total_output_token_amount),
+        u128::from(total_token_0_amount),
+        u128::from(total_token_1_amount),
         trade_fee_rate,
         ctx.accounts.amm_config.protocol_fee_rate,
         ctx.accounts.amm_config.fund_fee_rate,
@@ -215,6 +215,7 @@ pub fn swap_base_input(
     } else {
         ctx.accounts.authority.to_account_info()
     };
+    msg!("token_1_vault balance before transfer: {}", ctx.accounts.token_1_vault.get_lamports());
     transfer_token(
         token_0_authority,
         ctx.accounts.token_0_account.to_account_info(),
@@ -250,22 +251,28 @@ pub fn swap_base_input(
             ctx.accounts.system_program.to_account_info(),
             &[],
         )?;
-    // } else {
-    //     // take the fee when swap from SPL token -> Native
-    //     transfer_native_token(
-    //         ctx.accounts.token_1_vault.to_account_info(),
-    //         ctx.accounts.create_pool_fee.to_account_info(),
-    //         u64::try_from(result.padding_trade_fee).unwrap(),
-    //         false,
-    //         ctx.accounts.system_program.to_account_info(),
-    //         &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
-    //     )?;
+    } else {
+        // take the fee when swap from SPL token -> Native
+        transfer_native_token(
+            ctx.accounts.token_1_vault.to_account_info(),
+            ctx.accounts.create_pool_fee.to_account_info(),
+            u64::try_from(result.padding_trade_fee).unwrap(),
+            false,
+            ctx.accounts.system_program.to_account_info(),
+            &[&[
+                POOL_VAULT_SEED.as_bytes(),
+                ctx.accounts.pool_state.key().as_ref(),
+                ctx.accounts.system_program.key().as_ref(),
+                &[pool_state.vault_1_bump][..],
+            ][..]],
+      )?;
     }
+    msg!("token_1_vault balance after transfer: {}", ctx.accounts.token_1_vault.get_lamports());
 
     emit!(SwapEvent {
         pool_id,
-        input_vault_before: total_input_token_amount,
-        output_vault_before: total_output_token_amount,
+        token_0_vault_before: total_token_0_amount,
+        token_1_vault_before: total_token_1_amount,
         input_amount: u64::try_from(result.source_amount_swapped).unwrap(),
         output_amount: u64::try_from(result.destination_amount_swapped).unwrap(),
         base_input: true,

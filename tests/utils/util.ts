@@ -297,3 +297,7 @@ export const logPairBalance = ({
   ]);
   console.log('===========', label, '===========');
 }
+
+export const sleep = async (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
