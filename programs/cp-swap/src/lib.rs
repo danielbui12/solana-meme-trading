@@ -251,7 +251,7 @@ pub mod booster_swap {
     ///
     /// * `ctx`- The context of accounts
     ///
-    pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
-        instructions::deploy_pair(ctx)
+    pub fn pre_deploy_pair(ctx: Context<PreDeployPair>) -> Result<()> {
+        instructions::pre_deploy_pair(ctx)
     }
 }

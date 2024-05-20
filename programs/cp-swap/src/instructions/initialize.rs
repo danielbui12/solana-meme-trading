@@ -1,5 +1,4 @@
 use std::ops::Deref;
-
 use crate::curve::CurveCalculator;
 use crate::error::ErrorCode;
 use crate::states::*;

@@ -39,7 +39,7 @@ pub struct SwapEvent {
 
 /// Emitted when deploy pair
 #[event]
-pub struct DeployPairEvent {
+pub struct PreDeployPairEvent {
     #[index]
     pub pool_id: Pubkey,
     /// pool vault sub trade fees

@@ -19,5 +19,5 @@ pub use create_mint::*;
 pub mod mint_tokens;
 pub use mint_tokens::*;
 
-pub mod deploy_pair;
-pub use deploy_pair::*;
+pub mod pre_deploy_pair;
+pub use pre_deploy_pair::*;

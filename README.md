@@ -18,4 +18,10 @@ git clone https://github.com/danielbui12/booster-swap
 cd booster-swap && anchor test
 ```
 
-TODO: update token_1 vault
+## Flow to deploy to Raydium
+1. Create open-book
+2. Initialize
+3. Deposit
+  - Approve
+  - Wrap Native SOL
+  - Invoke Deposit instruction 

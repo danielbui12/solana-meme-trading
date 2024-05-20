@@ -1,8 +1,8 @@
-use std::borrow::BorrowMut;
+use std::borrow::Borrow;
+
 use crate::error::ErrorCode;
 use crate::states::*;
-use crate::utils::{close_account, close_token_account};
-use crate::utils::{token::*, math::{to_decimals, from_decimals}};
+use crate::utils::{token::*, math::{to_decimals, from_decimals}, account::*};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::{
@@ -12,8 +12,9 @@ use anchor_spl::{
 use pyth_sdk_solana::state::SolanaPriceAccount;
 
 #[derive(Accounts)]
-pub struct DeployPair<'info> {
+pub struct PreDeployPair<'info> {
     /// The user performing the DeployPair
+    #[account(address = crate::admin::id())]
     pub payer: Signer<'info>,
 
     /// CHECK: create pool fee account
@@ -81,11 +82,9 @@ pub struct DeployPair<'info> {
     pub token_program: Program<'info, Token>,
 
     pub system_program: Program<'info, System>,
-
-    pub raydium_program: Program<'info, System>,
 }
 
-pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
+pub fn pre_deploy_pair(ctx: Context<PreDeployPair>) -> Result<()> {
     let block_timestamp = solana_program::clock::Clock::get()?.unix_timestamp as u64;
     let pool_state = &mut ctx.accounts.pool_state.load_mut()?;
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Deploy)
@@ -93,6 +92,8 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
     {
         return err!(ErrorCode::NotApproved);
     }
+    // lock state to prevent any incoming actions
+    pool_state.set_status(1);
 
     // invoke Pyth program to get SOL price
     let token_1_price = {
@@ -130,7 +131,32 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
     };
     require_gte!(token_0_market_cap, to_decimals(MIN_TOKEN_0_MARKET_CAP, ctx.accounts.token_0_mint.decimals.into()) as u128, ErrorCode::InvalidMarketCap);
 
-    // create Raydium CPMM pool with `FREEZED_AMOUNT` token_0 and `BALANCE_OF_DEPLOYED_POOL` token_1
+    // TODO: create Raydium CPMM pool with `FREEZED_AMOUNT` token_0 and `BALANCE_OF_DEPLOYED_POOL` token_1
+    // @dev just test for now: transfer all balances to token_x_account
+    transfer_token(
+        ctx.accounts.authority.to_account_info(),
+        ctx.accounts.token_0_account.to_account_info(),
+        ctx.accounts.token_0_vault.to_account_info(),
+        ctx.accounts.token_0_mint.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        FREEZED_AMOUNT,
+        ctx.accounts.token_0_mint.decimals,
+        false,
+        &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
+    )?;
+    transfer_native_token(
+        ctx.accounts.token_1_vault.to_account_info(),
+        ctx.accounts.token_1_account.to_account_info(),
+        ctx.accounts.token_1_vault.get_lamports(),
+        false,
+        ctx.accounts.system_program.to_account_info(),
+        &[&[
+            POOL_VAULT_SEED.as_bytes(),
+            ctx.accounts.pool_state.key().as_ref(),
+            ctx.accounts.system_program.key().as_ref(),
+            &[pool_state.vault_1_bump][..],
+        ][..]],
+    )?;
 
     // burn the rest of token_0 in vault_0 
     token_burn(
@@ -143,41 +169,48 @@ pub fn deploy_pair(ctx: Context<DeployPair>) -> Result<()> {
     )?;
 
     // emit event
-    emit!(events::DeployPairEvent {
+    emit!(events::PreDeployPairEvent {
         pool_id: ctx.accounts.pool_state.key(),
         token_0_vault_before: actual_token_0_amount,
         token_1_vault_before: actual_token_1_amount,
         token_0_market_cap: token_0_market_cap,
     });
 
+
     // close `observation_state`, `vault_0`, `vault_1`, `pool_state` account
     // transfer the rest of balance of all accounts to `create_pool_fee``
-
-    // close token_0_vault
+    //
+    // close token_0_vault token account
     close_token_account(
-        ctx.accounts.authority.to_account_info().borrow_mut(),
-        ctx.accounts.token_0_vault.to_account_info().borrow_mut(),
-        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
-        ctx.accounts.token_program.to_account_info().borrow_mut(),
+        ctx.accounts.authority.to_account_info().borrow(),
+        ctx.accounts.token_0_vault.to_account_info().borrow(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow(),
+        ctx.accounts.token_program.to_account_info().borrow(),
         &[&[crate::AUTH_SEED.as_bytes(), &[pool_state.auth_bump]]],
+    )?;
+
+    // close token_0_vault account
+    close_account(
+        ctx.accounts.token_0_vault.to_account_info().borrow(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow(),
     )?;
 
     // close token_1_vault
     close_account(
-        ctx.accounts.token_1_vault.to_account_info().borrow_mut(),
-        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+        ctx.accounts.token_1_vault.to_account_info().borrow(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow(),
     )?;
 
     // close pool_state
     close_account(
-        ctx.accounts.pool_state.to_account_info().borrow_mut(),
-        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+        ctx.accounts.pool_state.to_account_info().borrow(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow(),
     )?;
 
     // close observation
     close_account(
-        ctx.accounts.observation_state.to_account_info().borrow_mut(),
-        ctx.accounts.create_pool_fee.to_account_info().borrow_mut(),
+        ctx.accounts.observation_state.to_account_info().borrow(),
+        ctx.accounts.create_pool_fee.to_account_info().borrow(),
     )?;
 
     Ok(())
