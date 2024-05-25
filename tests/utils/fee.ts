@@ -5,10 +5,10 @@ import {
 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
-export const FREEZED_AMOUNT = BigInt("200000000000000000");
+export const FROZEN_AMOUNT = BigInt("200000000000000000");
 export const AVAILABLE_AMOUNT = BigInt("800000000000000000");
 export const BASE_INIT_TOKEN_1_AMOUNT = BigInt("24000000000");
-export const TOKEN_TOTAL_SUPPLY = FREEZED_AMOUNT + AVAILABLE_AMOUNT;
+export const TOKEN_TOTAL_SUPPLY = FROZEN_AMOUNT + AVAILABLE_AMOUNT;
 export const NATIVE_MINT = new PublicKey('So11111111111111111111111111111111111111111');
 export const LAMPORTS_PER_SOL_DECIMAL = 9;
 

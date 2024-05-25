@@ -28,7 +28,7 @@ pub fn swap_base_output(
     let token_0_vault = ctx.accounts.token_0_vault.clone();
     let token_1_vault = ctx.accounts.token_1_vault.clone();
 
-    let freezed_amount = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
+    let frozen_amount = to_decimals(FROZEN_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
 
     // Calculate the trade amounts
     let (trade_fee_rate, total_token_0_amount, total_token_1_amount) = if is_zero_for_one {
@@ -37,7 +37,7 @@ pub fn swap_base_output(
 
         (
             ctx.accounts.amm_config.trade_from_zero_to_one_fee_rate,
-            total_token_0_amount.checked_sub(freezed_amount).unwrap(),
+            total_token_0_amount.checked_sub(frozen_amount).unwrap(),
             total_token_1_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
@@ -51,7 +51,7 @@ pub fn swap_base_output(
             total_token_0_amount
                 .checked_add(BASE_INIT_TOKEN_1_AMOUNT)
                 .unwrap(),
-            total_token_1_amount.checked_sub(freezed_amount).unwrap(),
+            total_token_1_amount.checked_sub(frozen_amount).unwrap(),
         )
     };
 
@@ -210,7 +210,7 @@ pub fn swap_base_output(
             ctx.accounts
                 .token_0_vault
                 .amount
-                .checked_sub(freezed_amount)
+                .checked_sub(frozen_amount)
                 .unwrap(),
             ctx.accounts
                 .token_1_vault
@@ -228,7 +228,7 @@ pub fn swap_base_output(
             ctx.accounts
                 .token_0_vault
                 .amount
-                .checked_sub(freezed_amount)
+                .checked_sub(frozen_amount)
                 .unwrap(),
         )
     };

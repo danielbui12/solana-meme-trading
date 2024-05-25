@@ -25,3 +25,7 @@ cd booster-swap && anchor test
   - Approve
   - Wrap Native SOL
   - Invoke Deposit instruction 
+
+```
+anchor test --skip-build --skip-deploy
+```

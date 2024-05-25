@@ -136,7 +136,7 @@ pub fn initialize(ctx: Context<Initialize>, open_time: u64) -> Result<()> {
         ][..]],
     )?;
 
-    let total_supply = to_decimals(FREEZED_AMOUNT, ctx.accounts.token_0_mint.decimals.into()) 
+    let total_supply = to_decimals(FROZEN_AMOUNT, ctx.accounts.token_0_mint.decimals.into())
         + to_decimals(AVAILABLE_AMOUNT, ctx.accounts.token_0_mint.decimals.into());
     mint_to(
         CpiContext::new_with_signer(

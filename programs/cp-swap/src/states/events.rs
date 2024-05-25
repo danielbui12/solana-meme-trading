@@ -46,6 +46,7 @@ pub struct PreDeployPairEvent {
     pub token_0_vault_before: u64,
     /// pool vault sub trade fees
     pub token_1_vault_before: u64,
-    /// market cap
-    pub token_0_market_cap: u128,
+    /// cumulative
+    pub token_0_cumulative: u128,
+    pub token_1_cumulative: u128,
 }

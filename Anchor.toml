@@ -25,7 +25,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/pyth_oracle_get_price.test.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/swap.test.ts"
 exec = "yarn ts-node -r tsconfig-paths/register clients/swap.ts"
 
 [test]
@@ -38,9 +38,9 @@ url = "https://api.mainnet-beta.solana.com"
 [[test.validator.clone]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 
-# Pyth SOL/USD
-[[test.validator.clone]]
-address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+# # Pyth SOL/USD
+# [[test.validator.clone]]
+# address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
 
 # # Raydium AMM
 # [[test.validator.clone]]

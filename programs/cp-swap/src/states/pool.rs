@@ -9,7 +9,7 @@ pub const POOL_VAULT_SEED: &str = "pool_vault";
 pub const Q32: u128 = (u32::MAX as u128) + 1; // 2^32
 
 pub const MIN_TOKEN_0_MARKET_CAP: u64 = 50_000;
-pub const FREEZED_AMOUNT: u64 = 200_000_000;
+pub const FROZEN_AMOUNT: u64 = 200_000_000;
 pub const AVAILABLE_AMOUNT: u64 = 800_000_000;
 pub const BASE_INIT_TOKEN_1_AMOUNT: u64 =
     24 * anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL; // 24 (virtual) SOL
