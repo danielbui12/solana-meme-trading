@@ -1,6 +1,6 @@
-# booster-swap
+# solana-meme-trading
 
-Booster swap.
+solana-meme-trading
 
 ## Environment Setup
 
@@ -14,8 +14,8 @@ Clone the repository and test the program.
 
 ```shell
 
-git clone https://github.com/danielbui12/booster-swap
-cd booster-swap && anchor test
+git clone https://github.com/danielbui12/solana-meme-trading
+cd solana-meme-trading && anchor test
 ```
 
 ## Flow to deploy to Raydium
